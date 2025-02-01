@@ -28,7 +28,7 @@ class CalendarViewModel: ObservableObject {
         }
     }
     
-    private func fetchEvents() {
+    func fetchEvents() {
         let calendars = eventStore.calendars(for: .event)
         let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
@@ -54,6 +54,9 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("Today's Events")
+            .onAppear {
+                viewModel.fetchEvents()
+            }
         }
     }
 }
