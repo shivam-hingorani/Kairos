@@ -6,61 +6,95 @@
 //
 
 import SwiftUI
-import EventKit
 
-class CalendarViewModel: ObservableObject {
-    private let eventStore = EKEventStore()
-    @Published var events: [EKEvent] = []
-    
-    init() {
-        requestAccess()
-    }
-    
-    private func requestAccess() {
-        eventStore.requestFullAccessToEvents { granted, error in
-            if granted {
-                DispatchQueue.main.async {
-                    self.fetchEvents()
-                }
-            } else {
-                print("Access denied: \(error?.localizedDescription ?? "Unknown error")")
-            }
-        }
-    }
-    
-    func fetchEvents() {
-        let calendars = eventStore.calendars(for: .event)
-        let startDate = Calendar.current.startOfDay(for: Date())
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
-        
-        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
-        
-        self.events = eventStore.events(matching: predicate).sorted { $0.startDate < $1.startDate }
-    }
-}
-
-struct ContentView: View {
-    @StateObject private var viewModel = CalendarViewModel()
-    
+struct CalendarOverview: View {
     var body: some View {
-        NavigationView {
-            List(viewModel.events, id: \.eventIdentifier) { event in
-                VStack(alignment: .leading) {
-                    Text(event.title)
-                        .font(.headline)
-                    Text("\(event.startDate, style: .date) at \(event.startDate, style: .time)")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
+        NavigationStack {
+            VStack {
+                Text("Hello, world")
+                    .font(.largeTitle)
+                    .padding()
+                
+                NavigationLink(destination: DayView()) {
+                    Text("Tap me")
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                 }
-            }
-            .navigationTitle("Today's Events")
-            .onAppear {
-                viewModel.fetchEvents()
             }
         }
     }
 }
 
-#Preview {
-    ContentView()
+struct DayView: View {
+    @State private var showReorderConfirmation = false
+
+    var body: some View {
+        VStack {
+            Text("Day View")
+                .font(.largeTitle)
+                .padding()
+            
+            HStack(spacing: 20) { // Add spacing between buttons
+                Button("Add") {
+                    showReorderConfirmation = true
+                }
+                .buttonStyle(UniformButtonStyle())
+
+                Button("Optimize") {
+                    showReorderConfirmation = true
+                }
+                .buttonStyle(UniformButtonStyle())
+            }
+        }
+        .navigationTitle("Day View")
+        .sheet(isPresented: $showReorderConfirmation) {
+            ReorderConfirmation()
+        }
+    }
+}
+
+// Custom button style to ensure uniform size
+struct UniformButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(width: 120, height: 50) // Ensure same size for all buttons
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0) // Slight press effect
+    }
+}
+
+struct ReorderConfirmation: View {
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        VStack {
+            Text("New Order")
+                .font(.largeTitle)
+                .padding()
+            
+            HStack {
+                Button("Accept") {
+                    dismiss()
+                }
+                .padding()
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+
+                Button("Decline") {
+                    dismiss()
+                }
+                .padding()
+                .background(Color.red)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
 }
