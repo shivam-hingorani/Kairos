@@ -266,7 +266,8 @@ class EventManager: ObservableObject {
                         "name": event.title ?? "No Title",
                         "location": event.location ?? "No Location",
                         "start_time": ISO8601DateFormatter().string(from: event.startDate),
-                        "end_time": ISO8601DateFormatter().string(from: event.endDate)
+                        "end_time": ISO8601DateFormatter().string(from: event.endDate),
+                        "new": "false"
                     ]
                 }
     
@@ -311,9 +312,10 @@ class EventManager: ObservableObject {
         if flag == 1 {//Means that it needs reshuffling
             messages = [
                 OpenAIChatMessage(role: "system", content: """
-                You are a helpful assistant that optimizes schedules based on tasks, location, and timing. Use the JSON input to re-order tasks optimally considering sleeping and eating times. 
+                You are a helpful assistant that optimizes schedules based on tasks, location, and timing. Use the JSON input to re-order tasks optimally considering sleeping and eating times. And change the start time and end time. After Re-ordering, the events need to be in chronological order
 
                 ### Constraints:
+                
                 - Do not change the timings of existing events. Just add the new event where it is optimal
                 - Return the optimized schedule as a **JSON array**, without nesting it under a `"schedule"` key.
                 - Maintain the same structure as the input, ensuring each event has `"name"`, `"location"`, `"start_time"`, and `"end_time"` fields.
@@ -341,9 +343,10 @@ class EventManager: ObservableObject {
         else{  // Means it need just adding in empty space
             messages = [
                 OpenAIChatMessage(role: "system", content: """
-                You are a helpful assistant that optimizes schedules based on tasks, location, and timing. Use the JSON input to re-order tasks optimally considering sleeping and eating times. 
+                You are a helpful assistant that optimizes schedules based on tasks, location, and timing. Use the JSON input to re-order tasks optimally considering sleeping and eating times. And change the start time and end time. After Re-ordering, the events need to be in chronological order
 
                 ### Constraints:
+                - if field 'new' is true, you are allowed to move event to different orders and timings.
                 - Return the optimized schedule as a **JSON array**, without nesting it under a `"schedule"` key.
                 - Maintain the same structure as the input, ensuring each event has `"name"`, `"location"`, `"start_time"`, and `"end_time"` fields.
 
@@ -512,9 +515,6 @@ struct DateDetailView: View {
 
                         DatePicker("End Date", selection: $eventEndDate, displayedComponents: [.date, .hourAndMinute])
 
-                        Button("Add Event Locally") {
-                            addEventToJSON()
-                        }
                         .padding()
                         .background(Color.orange)
                         .foregroundColor(.white)
@@ -526,6 +526,7 @@ struct DateDetailView: View {
                 HStack {
                     Button(action: {
                         Task {
+                            addEventToJSON()
                             if let response = await eventManager.sendToGPT(flag: 1, json: eventManager.jsonEvents) {
                                 optimizedSchedule = response
                                 showResult = true
@@ -579,7 +580,8 @@ struct DateDetailView: View {
             "name": eventName,
             "location": eventLocation,
             "start_time": isoFormatter.string(from: eventStartDate),
-            "end_time": isoFormatter.string(from: eventEndDate)
+            "end_time": isoFormatter.string(from: eventEndDate),
+            "new": "true"
         ]
 
         // Convert JSON String to Array, Append New Event, Convert Back
