@@ -2,7 +2,7 @@
 //  ReorderConfirmation.swift
 //  Kairos
 //
-//  Created by Shivam Hingorani on 2/1/25.
+//  Created by Shivam Hingorani and Varun Satheesh on 2/1/25.
 //
 
 import SwiftUI

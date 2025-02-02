@@ -2,7 +2,7 @@
 //  DayView.swift
 //  Kairos
 //
-//  Created by Shivam Hingorani on 2/1/25.
+//  Created by Shivam Hingorani and Varun Satheesh on 2/1/25.
 //
 
 import SwiftUI
@@ -21,10 +21,15 @@ struct DayView: View {
 
     var body: some View {
         VStack {
-            // Large day number
-            Text("\(Calendar.current.component(.day, from: Date()))")
-                .font(.system(size: 80, weight: .bold))
-                .padding(.top, 20)
+            // Display selected date
+            VStack {
+                Text(getMonthName(from: selectedDate))
+                    .font(.system(size: 20, weight: .bold))
+                
+                Text("\(Calendar.current.component(.day, from: selectedDate))")
+                    .font(.system(size: 80, weight: .bold))
+            }
+            .padding()
             
             if eventManager.events.isEmpty {
                 Text("No events for this day.")
@@ -33,7 +38,7 @@ struct DayView: View {
             } else {
                 List(eventManager.events, id: \.eventIdentifier) { event in
                     VStack(alignment: .leading) {
-                        Text(event.title)
+                        Text(event.title ?? "No Title")
                             .font(.headline)
                         Text("\(event.startDate.formatted(date: .omitted, time: .shortened))")
                             .font(.subheadline)
@@ -41,12 +46,11 @@ struct DayView: View {
                     }
                 }
             }
-
+            
             Spacer()
             
-            // Input field with rounded bubble style and mic button
             HStack {
-                TextField("What would you like to accomplish today?", text: $newEventTitle)
+                TextField("What will you accomplish today?", text: $newEventTitle)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(20)
@@ -68,7 +72,6 @@ struct DayView: View {
                 newEventTitle = text
             }
             
-            // Buttons at the Bottom
             HStack(spacing: 20) {
                 Button("Add") {
                     showReorderConfirmation = true
@@ -86,9 +89,10 @@ struct DayView: View {
             }
             .padding(.bottom, 20)
         }
-        .navigationTitle("\(DateFormatter().monthSymbols[Calendar.current.component(.month, from: Date()) - 1])")
         .onAppear {
-            calendarManager.requestAccess()
+            print("Fetching events for \(selectedDate)")
+            calendarManager.requestAccess(for: selectedDate)  // Pass the selected date here
+            eventManager.fetchEvents(for: selectedDate)      // You already pass the selected date here
         }
         .sheet(isPresented: $showReorderConfirmation) {
             ReorderConfirmation()
@@ -100,20 +104,39 @@ class CalendarManager: ObservableObject {
     private let eventStore = EKEventStore()
     @Published var events: [EKEvent] = []
 
-    func requestAccess() {
+    func requestAccess(for date: Date) {
         eventStore.requestAccess(to: .event) { granted, error in
             if granted {
-                self.fetchEvents()
+                DispatchQueue.main.async {
+                    print("Calendar access granted for \(date.formatted(.dateTime.month().day().year()))")
+                    self.fetchEvents(for: date)
+                }
+            } else {
+                DispatchQueue.main.async {
+                    if let error = error {
+                        print("Calendar access denied or error: \(error.localizedDescription)")
+                    } else {
+                        print("Calendar access denied.")
+                    }
+                }
             }
         }
     }
 
-    private func fetchEvents() {
-        let startDate = Date()
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
-        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: nil)
+    func fetchEvents(for date: Date) {
+        let startOfDay = Calendar.current.startOfDay(for: date)
+        let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
+        
+        let predicate = eventStore.predicateForEvents(withStart: startOfDay, end: endOfDay, calendars: nil)
+        
         DispatchQueue.main.async {
-            self.events = self.eventStore.events(matching: predicate)
+            self.events = self.eventStore.events(matching: predicate).sorted { $0.startDate < $1.startDate }
+            print("Fetched \(self.events.count) events for \(date.formatted(.dateTime.month().day().year()))")
+            
+            // Debugging events
+            for event in self.events {
+                print("Event: \(event.title ?? "No Title") at \(event.startDate)")
+            }
         }
     }
 }
@@ -121,8 +144,9 @@ class CalendarManager: ObservableObject {
 struct UniformButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .bold()
             .frame(width: 120, height: 50)
-            .background(Color.blue)
+            .background(Color.red)
             .foregroundColor(.white)
             .cornerRadius(10)
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
@@ -196,11 +220,8 @@ class SpeechRecognizer: ObservableObject {
 class EventManager: ObservableObject {
     private let eventStore = EKEventStore()
     @Published var events: [EKEvent] = []
-//    @Published var jsonEvents: String = "" // JSON string to store events
-//    private var openAIAPIKey: String
-    
+
     init() {
-//        self.openAIAPIKey = loadAPIKey()
     }
 
     func requestAccessToCalendar(){
@@ -217,118 +238,13 @@ class EventManager: ObservableObject {
         DispatchQueue.main.async {
             self.events = self.eventStore.events(matching: predicate).sorted { $0.startDate < $1.startDate }
             print("Fetched \(self.events.count) events for \(date.formatted(.dateTime.month().day().year()))")
-            
-//            // Convert events to JSON
-//            let eventDictionaries = self.events.map { event in
-//                [
-//                    "name": event.title ?? "No Title",
-//                    "location": event.location ?? "No Location",
-//                    "start_time": ISO8601DateFormatter().string(from: event.startDate),
-//                    "end_time": ISO8601DateFormatter().string(from: event.endDate)
-//                ]
-//            }
-//            
-//            do {
-//                let jsonData = try JSONSerialization.data(withJSONObject: eventDictionaries, options: .prettyPrinted)
-//                self.jsonEvents = String(data: jsonData, encoding: .utf8) ?? "Error generating JSON"
-//            } catch {
-//                print("Error serializing JSON: \(error.localizedDescription)")
-//            }
         }
     }
-//    func sendToGPT(prompt: String, json: String) {
-//        guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else { return }
-//        
-//        var request = URLRequest(url: url)
-//        request.httpMethod = "POST"
-//        request.addValue("Bearer \(openAIAPIKey)", forHTTPHeaderField: "Authorization")
-//        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-//        
-//        let requestBody: [String: Any] = [
-//            "model": "gpt-4",
-//            "messages": [
-//                ["role": "system", "content": prompt],
-//                ["role": "user", "content": json]
-//            ],
-//            "temperature": 0.7
-//        ]
-//        
-//        do {
-//            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody, options: [])
-//        } catch {
-//            print("Error creating request body: \(error.localizedDescription)")
-//            return
-//        }
-//        
-//        URLSession.shared.dataTask(with: request) { data, response, error in
-//            if let error = error {
-//                print("Error sending request: \(error.localizedDescription)")
-//                return
-//            }
-//            
-//            guard let data = data else {
-//                print("No data received")
-//                return
-//            }
-//            
-//            do {
-//                if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-//                   let choices = jsonResponse["choices"] as? [[String: Any]],
-//                   let message = choices.first?["message"] as? [String: Any],
-//                   let content = message["content"] as? String {
-//                    DispatchQueue.main.async {
-//                        print("GPT Response: \(content)")
-//                    }
-//                }
-//            } catch {
-//                print("Error parsing GPT response: \(error.localizedDescription)")
-//            }
-//        }.resume()
-//    }
 }
 
-//struct DateDetailView: View {
-////    @StateObject private var eventManager = EventManager()
-////    let selectedDate: Date
-//
-//    var body: some View {
-//        VStack {
-//            Text("Events")
-//                .font(.title)
-//                .bold()
-//                .padding()
-//            
-//            if eventManager.events.isEmpty {
-//                Text("No events for this day.")
-//                    .foregroundColor(.gray)
-//                    .padding()
-//            } else {
-//                List(eventManager.events, id: \.eventIdentifier) { event in
-//                    VStack(alignment: .leading) {
-//                        Text(event.title)
-//                            .font(.headline)
-//                        Text("\(event.startDate.formatted(date: .omitted, time: .shortened))")
-//                            .font(.subheadline)
-//                            .foregroundColor(.gray)
-//                    }
-//                }
-//                
-////                Text("Events JSON:")
-////                    .font(.headline)
-////                    .padding(.top)
-////                ScrollView {
-////                    Text(eventManager.jsonEvents)
-////                        .font(.body)
-////                        .padding()
-////                        .background(Color.gray.opacity(0.2))
-////                        .cornerRadius(8)
-////                }
-//            }
-//        }
-//        .navigationTitle(selectedDate.formatted(.dateTime.month().day().year()))
-//        .onAppear {
-//            eventManager.requestAccessToCalendar()
-//            eventManager.fetchEvents(for: selectedDate)
-//        }
-//    }
-//}
+// Function to get the month name
+func getMonthName(from date: Date) -> String {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "MMMM"  // This gives the full month name
+    return dateFormatter.string(from: date)
+}

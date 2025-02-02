@@ -10,9 +10,22 @@
 		40E745562D4EB64F001F131A /* Kairos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kairos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		406C3ED52D4FC0D10052D9D0 /* Exceptions for "Kairos" folder in "Kairos" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 40E745552D4EB64F001F131A /* Kairos */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		40E745582D4EB64F001F131A /* Kairos */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				406C3ED52D4FC0D10052D9D0 /* Exceptions for "Kairos" folder in "Kairos" target */,
+			);
 			path = Kairos;
 			sourceTree = "<group>";
 		};
@@ -255,6 +268,8 @@
 				DEVELOPMENT_TEAM = RH6Z5Z5Y5W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Kairos/Info.plist;
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Kairos would like to access your calendar to display events.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Kairos would like to use dictation for new events.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Kairos would like to use dictation for new events.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -286,6 +301,8 @@
 				DEVELOPMENT_TEAM = RH6Z5Z5Y5W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Kairos/Info.plist;
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Kairos would like to access your calendar to display events.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Kairos would like to use dictation for new events.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Kairos would like to use dictation for new events.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
