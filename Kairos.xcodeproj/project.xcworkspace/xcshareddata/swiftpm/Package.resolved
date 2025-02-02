@@ -1,0 +1,24 @@
+{
+  "originHash" : "87ada59a2b9d9d2bf014c5abaf91a347d91b62bedcde8c8cfd178aa61aa49ed4",
+  "pins" : [
+    {
+      "identity" : "alamofire",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Alamofire/Alamofire",
+      "state" : {
+        "revision" : "513364f870f6bfc468f9d2ff0a95caccc10044c5",
+        "version" : "5.10.2"
+      }
+    },
+    {
+      "identity" : "openaiswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Swift-Almanac/OpenAISwift.git",
+      "state" : {
+        "revision" : "7f0e2d7420e9ce2b9b4e62f51807ffcef6e9ce1c",
+        "version" : "1.7.25"
+      }
+    }
+  ],
+  "version" : 3
+}
